@@ -1,5 +1,5 @@
 #include <stdint.h>
-
+#include <stdbool.h>
 
 //Definiciones de bits asociados a cada segmento para construir los digitales
 

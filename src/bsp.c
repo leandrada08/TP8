@@ -2,6 +2,7 @@
 #include "bsp.h"
 #include "chip.h"
 #include "poncho.h"
+#include "ciaa.h"
 //Las funcion que seran usadas como funciones de callback, van en funciones publcias o privadas
 
 /* === Macros definitions ====================================================================== */
@@ -12,6 +13,27 @@ static struct board_s board = {0};
 /* === Private variable declarations =========================================================== */
 
 /* === Private function declarations =========================================================== */
+
+//! Funcion para iniciar placa
+void InitBoard(void){
+    Chip_SCU_PinMuxSet(LED_R_PORT, LED_R_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_R_FUNC);
+    Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_R_GPIO, LED_R_BIT, false);
+    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_R_GPIO, LED_R_BIT, true);
+
+    Chip_SCU_PinMuxSet(LED_G_PORT, LED_G_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_G_FUNC);
+    Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_G_GPIO, LED_G_BIT, false);
+    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_G_GPIO, LED_G_BIT, true);
+
+    Chip_SCU_PinMuxSet(LED_1_PORT, LED_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_1_FUNC);
+    DigitalOutputCreate(LED_1_GPIO, LED_1_BIT);
+
+    Chip_SCU_PinMuxSet(LED_2_PORT, LED_2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_2_FUNC);
+    DigitalOutputCreate(LED_2_GPIO, LED_2_BIT);
+
+    Chip_SCU_PinMuxSet(LED_3_PORT, LED_3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_3_FUNC);
+    DigitalOutputCreate(LED_3_GPIO, LED_3_BIT);
+}
+
 
 //! Funcion para configurar el hardware de los digitos
 void DigitsInit (void);
@@ -105,14 +127,17 @@ void SegmentsInit(void){
 
     Chip_SCU_PinMuxSet(SEGMENT_P_PORT, SEGMENT_P_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | SEGMENT_P_FUNC);
     Chip_GPIO_SetPinState(LPC_GPIO_PORT, SEGMENT_P_GPIO, SEGMENT_P_BIT, false);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, SEGMENT_P_GPIO, SEGMENT_F_BIT, true);
+    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, SEGMENT_P_GPIO, SEGMENT_P_BIT, true);
 
 }
 
 void BuzzerInit(void){
 
-    Chip_SCU_PinMuxSet(BUZZER_PORT, BUZZER_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | BUZZER_FUNC);
-    board.buzzer = DigitalOutputCreate(BUZZER_GPIO, BUZZER_BIT);
+    // Chip_SCU_PinMuxSet(BUZZER_PORT, BUZZER_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | BUZZER_FUNC);
+    // board.buzzer = DigitalOutputCreate(BUZZER_GPIO, BUZZER_BIT);
+
+    Chip_SCU_PinMuxSet(LED_B_PORT, LED_B_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_B_FUNC);
+    board.buzzer = DigitalOutputCreate(LED_B_GPIO, LED_B_BIT);
 
 
 }
@@ -126,10 +151,10 @@ void KeysInit (void){
     board.set_alarma = DigitalInputCreate(KEY_F2_GPIO,KEY_F2_BIT);
 
     Chip_SCU_PinMuxSet(KEY_F3_PORT, KEY_F3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F3_FUNC);
-    board.decrement = DigitalInputCreate(KEY_F3_GPIO,KEY_F3_BIT);
+    board.increment = DigitalInputCreate(KEY_F3_GPIO,KEY_F3_BIT);
 
     Chip_SCU_PinMuxSet(KEY_F4_PORT, KEY_F4_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F4_FUNC);
-    board.increment = DigitalInputCreate(KEY_F4_GPIO,KEY_F4_BIT);
+    board.decrement = DigitalInputCreate(KEY_F4_GPIO,KEY_F4_BIT);
 
     Chip_SCU_PinMuxSet(KEY_CANCEL_PORT, KEY_CANCEL_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_CANCEL_FUNC);
     board.cancel = DigitalInputCreate(KEY_CANCEL_GPIO,KEY_CANCEL_BIT);
@@ -170,6 +195,7 @@ board_t BoardCreate(void){
         }
     };
 
+    InitBoard();
     DigitsInit();
     SegmentsInit();
     BuzzerInit();
@@ -192,5 +218,5 @@ void SisTick_Init(uint16_t ticks){
 
 	//NVIC_SetPriority(SysTick_IRQn, (1<<__NVIC_PRIO_BITS)-1); //Fijo la prioridad de la interrupcion
 	
-	__asm volatile("cpsid i");
+	__asm volatile("cpsie i");
 }

@@ -94,6 +94,7 @@ void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size){
     int numero_escribir=0;
     for(int i = 0; i < size || i<= display -> digits ; i++){
         numero_escribir=number[size-i-1];
+        //display->memory[i] &= SEGMENT_P;
         display->memory[i] = IMAGES[numero_escribir];
     }
 }
@@ -108,7 +109,7 @@ void DisplayRefresh(display_t display){
     display->active_digit = (display->active_digit + 1) % display->digits;
 
 
-    segments= display->memory(display->active_digit);
+    segments= display->memory[display->active_digit];
     if(display->flashing_factor){ //Verifico si debo cambiar la 
 
 
@@ -147,7 +148,6 @@ void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t fr
 
 
 
-void DisplayToggleDot(display_t display, uint8_t position){
-    display->memory(position)^=(1<<7);//En la posicion indicada, hago una operacion OR para indicar que este activo el bit del punto
+void DisplayToggleDot(display_t display,uint8_t position){
+    display->memory[position] ^= (1<<7);
 }
- 

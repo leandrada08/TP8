@@ -56,27 +56,9 @@ bool ClkGetTime(clk_t reloj, uint8_t * hora, int size){
 }
 
 
-bool ClkSetTime(clk_t reloj, const uint8_t * hora, int size){
-    bool mal=0;
-    if(hora[5]>9 || hora[4]>5){//<! Verifico que la hora no sea una hora invalida
-        mal=1;
-    }
-    if(hora[3]>9 || hora[2]>5){
-        mal=1;
-    }
-    if(hora[1]>9 || hora[0]>2){
-        mal=1;
-    }
-    if(hora[0]==2 && hora[1]>3){
-        mal=1;
-    }
-    if(mal==0){
-        memcpy(reloj->hora_actual, hora, size);
-        reloj->hora_valida = true;
-        return true;
-    }else{
-        return false;
-    }
+void ClkSetTime(clk_t reloj, const uint8_t * hora, int size){
+    memcpy(reloj->hora_actual, hora, size);
+    reloj->hora_valida = true;
 }
 
 

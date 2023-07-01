@@ -30,10 +30,9 @@ bool ClkGetTime(clk_t reloj, uint8_t * hora, int size);
  * @param clk_t reloj
  * @param uint8_t hora
  * @param int size
- * @return bool 
  *
 */
-bool ClkSetTime(clk_t reloj, const uint8_t * hora, int size);
+void ClkSetTime(clk_t reloj, const uint8_t * hora, int size);
 
 
 
