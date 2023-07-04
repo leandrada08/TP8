@@ -19,6 +19,14 @@
 #define POSPONER_MINUTOS 5
 #endif
 
+#ifndef MODIFICAR
+#define MODIFICAR 3*TICS_POR_SEGUNDO
+#endif
+
+#ifndef CANCELAR_MODIFICAR
+#define CANCELAR_MODIFICAR MODIFICAR*10
+#endif
+
 
 
 /* Delacacion de datos privados*/
@@ -32,6 +40,8 @@ typedef enum{
 } modo_t;
 
 /*Declaracion de funciones Privadas*/
+
+
 
 /**
  * @brief Funcion para activar el buzzer de la alarma
@@ -65,17 +75,21 @@ static const uint8_t LIMITE_MINUTO[]={6,0};
 
 static const uint8_t LIMITE_HORA[]={2,4};
 
+static uint16_t tiempo_presionado_hora_actual;
+
+static uint16_t tiempo_presionado_hora_alarma;
+
+static uint16_t tiempo_sin_presionar; 
 
 /*Imprementacion de funciones publicas*/
 void ToggleAlarma(clk_t reloj){
-    if(sonando_alarma!=0){
+    if(sonando_alarma){
         sonando_alarma=false;
         DigitalOutputDesactivate(board->buzzer);
     }else{
         sonando_alarma=true;
         DigitalOutputActivate(board->buzzer);
     }
-
 }
 
 void CambiarModo(modo_t valor){
@@ -99,11 +113,6 @@ void CambiarModo(modo_t valor){
         break;
     case AJUSTANDO_HORAS_ALARMA:
         DisplayFlashDigits(board->display, 2, 3, PERIODO_PARPADEO);
-        // DisplayToggleDot(board->display,0);
-        // DisplayToggleDot(board->display,1);
-        // DisplayToggleDot(board->display,2);
-        // DisplayToggleDot(board->display,3);
-        
         break;  
     default:
         break;
@@ -116,7 +125,6 @@ int main(void){
     uint8_t entrada[4];//Vector en el cual guardaremos el valor de entrada y lo que mostraremos mientras configuro la hora
     reloj =ClkCreate(TICS_POR_SEGUNDO, ToggleAlarma);
     board = BoardCreate();
-
     CambiarModo(SIN_CONFIGURAR);
 
     SisTick_Init(TICS_POR_SEGUNDO);
@@ -127,8 +135,8 @@ int main(void){
         //BOTON ACEPTAR
         if(DigitalInputHasActivate(board->accept)){
             if(sonando_alarma){
-                ToggleAlarma(reloj);
                 PosponerAlarma(reloj,POSPONER_MINUTOS,sonando_alarma);
+                //ToggleAlarma(reloj);
             }else{
                 if(modo==MOSTRANDO_HORA){
                     ClkActivateAlarma(reloj,1);
@@ -197,19 +205,40 @@ int main(void){
 
         //BOTON CONFIGURAR HORA ACTUAL
         if(DigitalInputHasActivate(board->set_time)){
+            tiempo_presionado_hora_actual=1;
+        }
+
+        if(tiempo_presionado_hora_actual>MODIFICAR){
+            tiempo_presionado_hora_actual=0;
+            tiempo_sin_presionar=1;
             CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
             ClkGetTime(reloj, entrada, sizeof(entrada));
             DisplayWriteBCD(board->display,entrada,sizeof(entrada));
         }
 
 
+
         //BOTON CONFIGURAR ALARMA
         if(DigitalInputHasActivate(board->set_alarma)){
+            tiempo_presionado_hora_alarma=1;
+        }
+
+
+        if(tiempo_presionado_hora_alarma>MODIFICAR){
+            tiempo_presionado_hora_alarma=0;
+            tiempo_sin_presionar=1;
             CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
             ClkGetAlarma(reloj, entrada, sizeof(entrada));
             DisplayWriteBCD(board->display,entrada,sizeof(entrada));
         }
     
+
+
+
+        if (tiempo_sin_presionar > CANCELAR_MODIFICAR) {
+            tiempo_sin_presionar = 0;
+            CambiarModo(MOSTRANDO_HORA);
+        }
 
         for (int index = 0; index < 20; index++) {
             for (int delay = 0; delay < 25000; delay++) {
@@ -219,6 +248,7 @@ int main(void){
     }
 }
 
+
 void SysTick_Handler(void){
     static uint16_t contador=0;
     uint8_t hora[4];
@@ -226,23 +256,52 @@ void SysTick_Handler(void){
     DisplayRefresh(board->display);
     ClkTick(reloj);
 
+    // Contador para que el punto central parpadee 1 vez por segundo
     contador = (contador+1)%TICS_POR_SEGUNDO;
     if(contador>=TICS_POR_SEGUNDO/2){
         llave=true;
     }else{
         llave=false;
     }
+
+
+    // Logica para parpadear punto central y prender ultimo punto
     if(modo<=MOSTRANDO_HORA){ //Solo muestra hora en mostrando hora y configurar
         ClkGetTime(reloj, hora, sizeof(hora));
         DisplayWriteBCD(board->display,hora, sizeof(hora));
         if(llave){
-            //DisplaySetDot(board->display,1);
-                if(ClkGetAlarma(reloj,hora,sizeof(hora))){
-                    //DisplaySetDot(board->display,3);
-            }
+            DisplayToggleDot(board->display,1);
+        }
+        if(ClkGetAlarma(reloj, hora, sizeof(hora))){
+            DisplayOnDot(board->display,3);
         }
     }
 
+
+    // Logica para prender todos los puntos cuando se este modificando el codigo
+    if(modo==AJUSTANDO_MINUTOS_ALARMA||modo==AJUSTANDO_HORAS_ALARMA){
+       DisplayOnDot(board->display,0);
+       DisplayOnDot(board->display,1);
+       DisplayOnDot(board->display,2);
+       DisplayOnDot(board->display,3); 
+    }
+
+
+
+    // Logica para contar tiempo de boton presionado
+    if(tiempo_presionado_hora_actual>0){
+        tiempo_presionado_hora_actual++;
+    }
+    if(tiempo_presionado_hora_alarma>0){
+        tiempo_presionado_hora_alarma++;
+    }
+    if( (tiempo_sin_presionar>0) &&
+        !DigitalInputGetState(board->accept) &&
+        !DigitalInputGetState(board->cancel) &&
+        !DigitalInputGetState(board->decrement) &&
+        !DigitalInputGetState(board->increment)){
+        tiempo_sin_presionar++;
+    }
 }
 
 

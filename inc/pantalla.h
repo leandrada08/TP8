@@ -76,3 +76,20 @@ void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t fr
 void DisplayToggleDot(display_t display, uint8_t position);
 
 
+/**
+ * @brief Funcion para dejar prendido un punto
+ * 
+ * @param display Puntero al descriptoer de la pantalla
+ * @param position Posicion del punto que deseamos prender
+ */
+void DisplayOnDot(display_t display,uint8_t position);
+
+/**
+ * @brief Funcion para dejar apagado un punto
+ * 
+ * @param display Puntero al descriptoer de la pantalla
+ * @param position Posicion del punto que deseamos apagar
+ */
+void DisplayOffDot(display_t display,uint8_t position);
+
+
