@@ -208,7 +208,7 @@ int main(void){
             tiempo_presionado_hora_actual=1;
         }
 
-        if(tiempo_presionado_hora_actual>MODIFICAR){
+        if(tiempo_presionado_hora_actual>MODIFICAR && DigitalInputGetState(board->set_time)){
             tiempo_presionado_hora_actual=0;
             tiempo_sin_presionar=1;
             CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
@@ -224,7 +224,7 @@ int main(void){
         }
 
 
-        if(tiempo_presionado_hora_alarma>MODIFICAR){
+        if(tiempo_presionado_hora_alarma>MODIFICAR && DigitalInputGetState(board->set_alarma)){
             tiempo_presionado_hora_alarma=0;
             tiempo_sin_presionar=1;
             CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
